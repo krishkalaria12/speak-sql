@@ -1,5 +1,6 @@
 def main():
-    print("Hello from speak-sql!")
+    user_input = input("Enter your uri for postgresql: ")
+    
 
 
 if __name__ == "__main__":
