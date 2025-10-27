@@ -2,9 +2,10 @@ from langchain.tools import tool
 
 from helpers.query_checker import check_query
 from helpers.get_db import get_db
+from config.config import db_uri
 
 @tool
-def read_db(query):
+def read_db(query: str) -> str:
     '''
         This is the tool to call the db and read the values from it,
         we will be having only 2 table which includes ticket booking and museum details
@@ -19,13 +20,13 @@ def read_db(query):
     '''
 
     # check with llm for the rightfulness of the query
-    isSafe = check_query(query)
+    isSafe = check_query(query, "read")
 
     if not isSafe:
         return "The query given by you is not safe to read the records. Try again with some other query"
     
     # send the uri
-    db = get_db()
+    db = get_db(db_uri)
     query_ans = db.run(query)
 
     return query_ans

@@ -2,9 +2,10 @@ from langchain.tools import tool
 
 from helpers.query_checker import check_query
 from helpers.get_db import get_db
+from config.config import db_uri
 
 @tool
-def write_and_update_db(query):
+def write_and_update_db(query: str) -> str:
     '''
         This tool helps write and edit the prompt (SQL query) before it's validated and executed.
         Use it to construct or modify queries for the two tables: ticket booking and museum details.
@@ -19,13 +20,13 @@ def write_and_update_db(query):
     '''
 
     # check with llm for the rightfulness of the query
-    isSafe = check_query(query)
+    isSafe = check_query(query, "write")
 
     if not isSafe:
         return "The query given by you is not safe to write or update the records. Try again with some other query"
     
     # send the uri
-    db = get_db()
+    db = get_db(db_uri)
     query_ans = db.run(query)
 
     return query_ans
