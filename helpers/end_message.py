@@ -1,4 +1,4 @@
-from graph import MessagesState
+from state import MessagesState
 
 def end_node(state: MessagesState):
     """Final node"""

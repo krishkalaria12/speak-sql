@@ -2,7 +2,7 @@ from langchain.messages import AIMessage
 from pydantic import BaseModel, Field
 from langgraph.types import Command, interrupt
 
-from graph import MessagesState
+from state import MessagesState
 from tools.read_db import read_db
 from tools.write_db import write_and_update_db
 from config.config import google_model

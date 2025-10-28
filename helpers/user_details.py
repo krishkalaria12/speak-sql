@@ -1,6 +1,6 @@
 from langgraph.types import Command, interrupt
 
-from graph import MessagesState
+from state import MessagesState
 
 def human_node(state: MessagesState):
     """Human Intervention node - loops back to model unless input is done"""

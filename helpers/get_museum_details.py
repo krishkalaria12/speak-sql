@@ -1,4 +1,4 @@
-from graph import MessagesState
+from state import MessagesState
 from langchain.messages import SystemMessage, HumanMessage
 
 from config.config import google_model

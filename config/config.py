@@ -1,5 +1,8 @@
 import os
+from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
+
+load_dotenv()
 
 if "GOOGLE_API_KEY" not in os.environ:
     raise RuntimeError("GOOGLE_API_KEY environment variable is required")

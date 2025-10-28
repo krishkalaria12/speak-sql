@@ -1,4 +1,4 @@
-from graph import MessagesState
+from state import MessagesState
 
 def routeQuery(state: MessagesState):
     """Gate function to route the query which includes book ticket or get museum detail or irrelevant question based on the user query"""
