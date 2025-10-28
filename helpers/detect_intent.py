@@ -1,5 +1,6 @@
 from graph import MessagesState
 from pydantic import BaseModel, Field
+from langchain.messages import SystemMessage, HumanMessage, AIMessage
 
 from config.config import google_model
 
@@ -23,15 +24,13 @@ def detect_intent(state: MessagesState):
     user_message = state.get("user_message")
 
     messages = [
-        {
-            "role": "system",
-            "content": sys_prompt_detect_intent
-        },
-        {
-            "role": "user",
-            "content": user_message
-        }
-    ]
+        SystemMessage(
+            content=sys_prompt_detect_intent
+        ),
+        HumanMessage(
+            content=user_message
+        )
+    ] + state["messages"]
 
     # call the llm
     model_with_structure = google_model.with_structured_output(DetectIntent)
@@ -39,9 +38,15 @@ def detect_intent(state: MessagesState):
 
     if response.is_ticket:
         state["to_book_or_detail"] = True
-    elif response.is_museum:
+        state["irrevelant_question"] = ""
+        return state
+
+    if response.is_museum:
         state["to_book_or_detail"] = False
-    elif not response.is_ticket and not response.is_museum:
-        state["irrevelant_question"] = response.irrevelant
-    
+        state["irrevelant_question"] = ""
+        return state
+
+    state["irrevelant_question"] = response.irrevelant
+    state["messages"] = state["messages"] + [AIMessage(content=response.irrevelant)]
+
     return state

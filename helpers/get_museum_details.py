@@ -1,8 +1,8 @@
 from graph import MessagesState
+from langchain.messages import SystemMessage, HumanMessage
 
 from config.config import google_model
 from tools.read_db import read_db
-from tools.write_db import write_and_update_db
 
 sys_prompt_museum_details = '''
 You are an assistant that provides clear, factual details about museums to users.
@@ -36,20 +36,21 @@ Safety and correctness:
 - Do not fabricate details—if something is unknown, be explicit that the information isn't available.
 '''
 
-def getMuseumDetails(state: MessagesState):
+def get_museum_details(state: MessagesState):
     # call the llm with db instance to it
-    model_with_tools = google_model.bind_tools([read_db, write_and_update_db])
+    model_with_tools = google_model.bind_tools([read_db])
 
     messages = [
-        {
-            "role": "system",
-            "content": sys_prompt_museum_details
-        },
-        {
-            "role": "user",
-            "content": state["user_message"]
-        }
-    ]
+        SystemMessage(
+            content=sys_prompt_museum_details
+        ),
+        HumanMessage(
+            content=state["user_message"]
+        )
+    ] + state["messages"]
 
-    response = model_with_tools.invoke(messages)
-    
+    bot_message = model_with_tools.invoke(messages)
+
+    return {
+        "messages": state["messages"] + [bot_message]
+    }
