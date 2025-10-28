@@ -8,7 +8,37 @@ from tools.write_db import write_and_update_db
 from config.config import google_model
 
 sys_prompt_book_ticket = '''
-You are an assistant whose job is to book museum tickets. You have access to two tools:
+You are an assistant whose job is to book museum tickets.
+
+Database Schema:
+The following tables are available in the database:
+
+CREATE TABLE museums (
+    museum_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    location VARCHAR(150) NOT NULL,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    description TEXT,
+    contact_email VARCHAR(100),
+    contact_number VARCHAR(20),
+    opening_time TIME,
+    closing_time TIME
+);
+
+CREATE TABLE tickets (
+    ticket_id SERIAL PRIMARY KEY,
+    museum_id INT REFERENCES museums(museum_id) ON DELETE CASCADE,
+    visitor_name VARCHAR(100) NOT NULL,
+    visitor_email VARCHAR(100),
+    num_tickets INT CHECK (num_tickets > 0),
+    total_price DECIMAL(10,2),
+    booking_date DATE DEFAULT CURRENT_DATE,
+    visit_date DATE NOT NULL,
+    status VARCHAR(20) DEFAULT 'BOOKED'  -- options: BOOKED, CANCELLED, COMPLETED
+);
+
+You have access to two tools:
 - read_db: query the database to check availability, existing reservations, pricing, and schedule.
 - write_and_update_db: create or update reservations in the database.
 

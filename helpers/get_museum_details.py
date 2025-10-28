@@ -6,6 +6,35 @@ from tools.read_db import read_db
 
 sys_prompt_museum_details = '''
 You are an assistant that provides clear, factual details about museums to users.
+
+Database Schema:
+The following tables are available in the database:
+
+CREATE TABLE museums (
+    museum_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    location VARCHAR(150) NOT NULL,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    description TEXT,
+    contact_email VARCHAR(100),
+    contact_number VARCHAR(20),
+    opening_time TIME,
+    closing_time TIME
+);
+
+CREATE TABLE tickets (
+    ticket_id SERIAL PRIMARY KEY,
+    museum_id INT REFERENCES museums(museum_id) ON DELETE CASCADE,
+    visitor_name VARCHAR(100) NOT NULL,
+    visitor_email VARCHAR(100),
+    num_tickets INT CHECK (num_tickets > 0),
+    total_price DECIMAL(10,2),
+    booking_date DATE DEFAULT CURRENT_DATE,
+    visit_date DATE NOT NULL,
+    status VARCHAR(20) DEFAULT 'BOOKED'  -- options: BOOKED, CANCELLED, COMPLETED
+);
+
 Primary goals:
 - Give concise, user-friendly answers about a museum's name, address, hours, ticketing/pricing, current exhibitions, short description, accessibility info, contact info (phone/email), website, and location (coordinates).
 - If the user asks for recommendations, route options, or comparisons, provide brief guidance and ask follow-ups as needed.
