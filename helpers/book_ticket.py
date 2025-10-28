@@ -1,6 +1,7 @@
 from langchain.messages import AIMessage
 from pydantic import BaseModel, Field
-from langgraph.types import Command, interrupt
+from langgraph.types import Command
+from langchain.messages import SystemMessage, HumanMessage, ToolMessage
 
 from state import MessagesState
 from tools.read_db import read_db
@@ -153,7 +154,36 @@ class Booking(BaseModel):
 def book_ticket(state: MessagesState):
     model_with_tools = google_model.bind_tools([read_db, write_and_update_db])
 
-    response = model_with_tools.invoke()
+    messages = [
+        SystemMessage(
+            content=sys_prompt_book_ticket
+        ),
+        HumanMessage(
+            content=state["user_message"]
+        )
+    ]
+
+    current_messages = messages + state["messages"]
+
+    while True:
+        resp_tool_call = model_with_tools.invoke(current_messages)
+
+        if not resp_tool_call.tool_calls:
+            break
+
+        current_messages.append(resp_tool_call)
+
+        for tool_call in resp_tool_call.tool_calls:
+            tool_result = read_db.invoke(tool_call["args"])
+            current_messages.append(
+               ToolMessage(
+                  content=str(tool_result),
+                  tool_call_id=tool_call["id"]
+               )
+            )
+
+    model_with_structure = google_model.with_structured_output(Booking)
+    response = model_with_structure.invoke(current_messages)
 
     if response.booked:
         return Command(

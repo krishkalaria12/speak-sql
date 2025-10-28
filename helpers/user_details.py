@@ -5,11 +5,11 @@ from state import MessagesState
 def human_node(state: MessagesState):
     """Human Intervention node - loops back to model unless input is done"""
 
-    message = f"Answer the question asked by the bot, {state["messages"][-1]}"
+    last_message = state["messages"][-1].content
 
     user_feedback = interrupt(
         {
-            "message": message
+            "message": last_message
         }
     )
 

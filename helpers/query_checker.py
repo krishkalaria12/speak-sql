@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from langchain.messages import SystemMessage, HumanMessage
 from config.config import google_model
 
 sys_prompt_query_read = '''
@@ -123,17 +124,15 @@ class Safety(BaseModel):
 
 def check_query(query, mode):
     messages = [
-        {
-            "role": "system",
-            "content": sys_prompt_query_read if mode=="read" else sys_prompt_query_write_and_update
-        },
-        {
-            "role": "user",
-            "content": query
-        }
+        SystemMessage(
+            content=sys_prompt_query_read if mode=="read" else sys_prompt_query_write_and_update
+        ),
+        HumanMessage(
+            content=query
+        )
     ]
 
     model_with_structure = google_model.with_structured_output(Safety)
     response = model_with_structure.invoke(messages)
-    
+
     return response.safe

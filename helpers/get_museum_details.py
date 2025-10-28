@@ -1,5 +1,6 @@
 from state import MessagesState
 from langchain.messages import SystemMessage, HumanMessage
+from langchain.messages import ToolMessage
 
 from config.config import google_model
 from tools.read_db import read_db
@@ -100,20 +101,37 @@ You have access to a read-only database tool called "read_db". Use it to fetch a
 '''
 
 def get_museum_details(state: MessagesState):
-    # call the llm with db instance to it
-    model_with_tools = google_model.bind_tools([read_db])
+      # call the llm with db instance to it
+      model_with_tools = google_model.bind_tools([read_db])
 
-    messages = [
-        SystemMessage(
+      messages = [
+         SystemMessage(
             content=sys_prompt_museum_details
-        ),
-        HumanMessage(
+         ),
+         HumanMessage(
             content=state["user_message"]
-        )
-    ] + state["messages"]
+         )
+      ]
 
-    bot_message = model_with_tools.invoke(messages)
+      current_messages = messages + state["messages"]
 
-    return {
-        "messages": state["messages"] + [bot_message]
-    }
+      while True:
+         response = model_with_tools.invoke(current_messages)
+
+         if not response.tool_calls:
+            break
+
+         current_messages.append(response)
+
+         for tool_call in response.tool_calls:
+            tool_result = read_db.invoke(tool_call["args"])
+            current_messages.append(
+               ToolMessage(
+                  content=str(tool_result),
+                  tool_call_id=tool_call["id"]
+               )
+            )
+
+      return {
+         "messages": [response]
+      }

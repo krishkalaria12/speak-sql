@@ -12,7 +12,7 @@ if "DATABASE_URI" not in os.environ:
 
 
 google_model = init_chat_model(
-    temperature=0.3,  # Reduced from 1 for more consistent, focused responses
+    temperature=0.3,
     model_provider="google_genai",
     model="gemini-2.5-flash",
 )
