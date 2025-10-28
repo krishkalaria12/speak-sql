@@ -34,7 +34,6 @@ agent_builder.add_conditional_edges(
     }
 )
 agent_builder.add_edge("get_museum_details", "end_node")
-agent_builder.add_edge("book_ticket", "human_node")
 agent_builder.add_edge("end_node", END)
 
 agent_builder.set_finish_point("end_node")

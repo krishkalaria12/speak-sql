@@ -9,3 +9,4 @@ class MessagesState(TypedDict):
     to_book_or_detail: bool
     irrevelant_question: str
     user_details: Annotated[list[AnyMessage], operator.add]
+    awaiting_user_input: bool

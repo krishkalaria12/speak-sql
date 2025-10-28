@@ -1,7 +1,7 @@
 from langchain.messages import AIMessage
 from pydantic import BaseModel, Field
 from langgraph.types import Command
-from langchain.messages import SystemMessage, HumanMessage, ToolMessage
+from langchain.messages import SystemMessage, ToolMessage
 
 from state import MessagesState
 from tools.read_db import read_db
@@ -153,17 +153,15 @@ class Booking(BaseModel):
 
 def book_ticket(state: MessagesState):
     model_with_tools = google_model.bind_tools([read_db, write_and_update_db])
+    tool_registry = {
+        read_db.name: read_db,
+        write_and_update_db.name: write_and_update_db,
+    }
 
-    messages = [
-        SystemMessage(
-            content=sys_prompt_book_ticket
-        ),
-        HumanMessage(
-            content=state["user_message"]
-        )
-    ]
+    system_message = SystemMessage(content=sys_prompt_book_ticket)
+    conversation = state["messages"]
 
-    current_messages = messages + state["messages"]
+    current_messages = [system_message] + conversation
 
     while True:
         resp_tool_call = model_with_tools.invoke(current_messages)
@@ -174,7 +172,11 @@ def book_ticket(state: MessagesState):
         current_messages.append(resp_tool_call)
 
         for tool_call in resp_tool_call.tool_calls:
-            tool_result = read_db.invoke(tool_call["args"])
+            tool = tool_registry.get(tool_call.get("name"))
+            if not tool:
+                continue
+
+            tool_result = tool.invoke(tool_call["args"])
             current_messages.append(
                ToolMessage(
                   content=str(tool_result),
@@ -188,12 +190,16 @@ def book_ticket(state: MessagesState):
     if response.booked:
         return Command(
             update={
-                "messages": state["messages"] + [AIMessage(content=response.answer)]
+                "messages": [AIMessage(content=response.answer)],
+                "awaiting_user_input": False
             },
             goto="end_node"
         )
 
-    return {
-        "messages": state["messages"] + [AIMessage(content=response.answer)],
-        "user_details": state["user_details"]
-    }
+    return Command(
+        update={
+            "messages": [AIMessage(content=response.answer)],
+            "awaiting_user_input": True
+        },
+        goto="human_node"
+    )
